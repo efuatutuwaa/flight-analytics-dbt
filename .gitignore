@@ -1,0 +1,26 @@
+# ---- dbt ----
+target/
+dbt_packages/
+logs/
+
+# ---- Local data files ----
+data/
+*.csv 
+
+# ---- DuckDB / databases ----
+*.duckdb
+
+# ---- Python ----
+.venv/
+__pycache__/
+*.pyc
+
+# ---- IDE ----
+.vscode/
+.idea/
+
+# ---- OS ----
+.DS_Store
+
+# ---- Secrets ----
+profiles.yml

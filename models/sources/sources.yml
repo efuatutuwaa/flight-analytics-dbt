@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: flights
+    schema: raw 
+    database: flight_db
+
+     
+    tables:
+      - name: airline
+      - name: airports
+      - name: arrivals
+      - name: cities
+      - name: codeshare
+      - name: countries
+      - name: departure
+      - name: flight_details
+      - name: routes
