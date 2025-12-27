@@ -1,0 +1,46 @@
+version: 2
+
+models: 
+  - name: stg_airline 
+    columns:
+      - name: airline_id
+        tests:
+          - unique
+          - not_null 
+  
+  - name: stg_airports
+    columns:
+      - name : airport_id
+        tests:
+          - unique
+          - not_null
+      - name: airport_city_id
+        tests:
+          - not_null
+
+  - name: stg_arrivals 
+    columns:
+      - name : arrival_id
+        tests:
+          - unique
+          - not_null
+      - name: arrival_airport_id
+        tests:
+          - not_null
+
+  - name: stg_departures 
+    columns:
+      - name : departure_id
+        tests:
+          - unique
+          - not_null
+      - name: departure_airport_id
+        tests:
+          - not_null  
+
+
+    
+
+      
+
+
