@@ -52,6 +52,12 @@ models:
           - unique
           - not_null
 
+  - name : stg_countries
+    columns:
+      - name : country_id
+        tests:
+          - unique
+          - not_null
     
 
       
