@@ -45,6 +45,12 @@ models:
           - unique
           - not_null
 
+  - name : stg_routes
+    columns:
+      - name : route_id
+        tests:
+          - unique
+          - not_null
 
     
 
