@@ -37,15 +37,15 @@ models:
       +schema: stg_models
     
     intermediate:
-      +materialized: table, incremental
-      +schema: int_models
+      +materialized: ephemeral
+     
     
     core:
       +materialized: table
       +schema: core_models
     
     marts:
-      +materialized: table
+      +materialized: table, incremental
       +schema: mart_models
     
     # these are NOT materialised by default, so we set them here
