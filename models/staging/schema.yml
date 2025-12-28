@@ -59,7 +59,30 @@ models:
           - unique
           - not_null
     
+  - name : stg_cities
+    columns:
+      - name : city_id
+        tests:
+          - unique
+          - not_null
+      - name : latitude
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -90
+                max_value: 90
+      - name : longitude
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -180
+                max_value: 180
 
+
+
+
+          
+    
       
 
 
