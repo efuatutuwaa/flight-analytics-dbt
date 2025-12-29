@@ -11,7 +11,7 @@ cleaned as (
         departure_airport_id, 
         arrival_airport_id,
         flight_date, 
-        date_trunc('day', flight_date) as flight_day,
+        -- date_trunc('day', flight_date) as flight_day,
         flight_status,
         flight_number, 
         case 
@@ -25,8 +25,6 @@ cleaned as (
         end as flight_iata 
 
     from source
-
-
 )
 
 select * from cleaned
