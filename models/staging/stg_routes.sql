@@ -11,7 +11,7 @@ cleaned as (
         departure_airport_id, 
         arrival_airport_id,
         distance as route_distance_km,
-        duration as route_duration_minutes,
+        duration as route_duration,
 
         -- time columns 
         scheduled_departure_time,
