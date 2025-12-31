@@ -28,11 +28,11 @@ cleaned as (
         timezone as departure_timezone, 
 
         -- time columns
-        scheduled as departure_scheduled_time,
-        estimated as departure_estimated_time,
-        actual as departure_actual_time,
-        estimated_runway as departure_estimated_runway_time,
-        actual_runway as departure_actual_runway_time,
+        scheduled as scheduled_departue_time,
+        estimated as estimated_departure_time,
+        actual as actual_departure_time,
+        estimated_runway as estimated_departure_runway_time,
+        actual_runway as actual_departure_runway_time,
 
         -- operational columns
         delay as departure_delay_minutes
