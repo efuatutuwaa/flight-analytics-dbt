@@ -9,15 +9,15 @@ select
 
 
     -- scheduled times --
-    dep.departure_scheduled_time,
-    arr.arrival_scheduled_time,
-    extract(epoch from (arr.arrival_scheduled_time - dep.departure_scheduled_time )) / 60
+    dep.scheduled_departure_time,
+    arr.scheduled_arrival_time,
+    extract(epoch from (arr.scheduled_arrival_time - dep.scheduled_departure_time )) / 60
         as scheduled_duration_minutes,
 
     -- actual times --
-    dep.departure_actual_time,
-    arr.arrival_actual_time,
-    extract(epoch from ( arr.arrival_actual_time - dep.departure_actual_time )) / 60
+    dep.actual_departure_time,
+    arr.actual_arrival_time,
+    extract(epoch from ( arr.actual_arrival_time - dep.actual_departure_time )) / 60
         as actual_duration_minutes,
 
     -- operational column --
