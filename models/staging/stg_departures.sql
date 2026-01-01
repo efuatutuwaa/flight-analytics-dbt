@@ -28,7 +28,7 @@ cleaned as (
         timezone as departure_timezone, 
 
         -- time columns
-        scheduled as scheduled_departue_time,
+        scheduled as scheduled_departure_time,
         estimated as estimated_departure_time,
         actual as actual_departure_time,
         estimated_runway as estimated_departure_runway_time,
