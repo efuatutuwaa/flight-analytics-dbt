@@ -62,3 +62,4 @@ select
     end as is_cancelled
 from base;
 
+
