@@ -32,11 +32,11 @@ models:
   flight_dbt:
 
     staging:
-      +materialized: view
+      +materialized: table
       +schema: staging_models
 
     intermediate:
-      +materialized: view
+      +materialized: table
       +schema: intermediate_models
 
     core:
