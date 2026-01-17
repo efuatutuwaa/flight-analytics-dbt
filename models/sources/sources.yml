@@ -2,10 +2,8 @@ version: 2
 
 sources:
   - name: flights
-    schema: raw 
-    database: flight_db
-
-     
+    catalog: workspace
+    schema: flight_analytics
     tables:
       - name: airline
       - name: airports
