@@ -23,17 +23,42 @@ with base as (
     arr.actual_arrival_time as actual_arrival_time_local,
 
     -- scheduled times in utc --
-    dep.scheduled_departure_time at time zone dep_geo.airport_timezone_name
-        as scheduled_departure_time_utc,
-    arr.scheduled_arrival_time at time zone arr_geo.airport_timezone_name
-        as scheduled_arrival_time_utc,
+to_utc_timestamp(
+    dep.scheduled_departure_time,
+    case
+        when dep_geo.airport_timezone_name in ('Unknown', '', null)
+            then 'UTC'
+        else dep_geo.airport_timezone_name
+    end
+) as scheduled_departure_time_utc,
 
-    -- actual times in utc --
-     dep.actual_departure_time at time zone dep_geo.airport_timezone_name
-        as actual_departure_time_utc,
-    arr.actual_arrival_time at time zone arr_geo.airport_timezone_name
-        as actual_arrival_time_utc
+to_utc_timestamp(
+    arr.scheduled_arrival_time,
+    case
+        when arr_geo.airport_timezone_name in ('Unknown', '', null)
+            then 'UTC'
+        else arr_geo.airport_timezone_name
+    end
+) as scheduled_arrival_time_utc,
 
+-- actual times in utc --
+to_utc_timestamp(
+    dep.actual_departure_time,
+    case
+        when dep_geo.airport_timezone_name in ('Unknown', '', null)
+            then 'UTC'
+        else dep_geo.airport_timezone_name
+    end
+) as actual_departure_time_utc,
+
+to_utc_timestamp(
+    arr.actual_arrival_time,
+    case
+        when arr_geo.airport_timezone_name in ('Unknown', '', null)
+            then 'UTC'
+        else arr_geo.airport_timezone_name
+    end
+) as actual_arrival_time_utc
 
 from {{ ref ('stg_flight_details') }} fd
 left join {{ ref ('stg_routes') }} r
@@ -52,10 +77,16 @@ left join {{ ref ('int_airport_geography')  }} arr_geo
 select 
     *, 
 
-    extract(epoch from (scheduled_arrival_time_utc - scheduled_departure_time_utc)) / 60
-        as scheduled_duration_minutes,
-    extract(epoch from (actual_arrival_time_utc - actual_departure_time_utc)) / 60
-        as actual_duration_minutes,
+        timestampdiff(
+        MINUTE,
+        scheduled_departure_time_utc,
+        scheduled_arrival_time_utc
+    ) as scheduled_duration_minutes,
+    timestampdiff(
+        MINUTE,
+        actual_departure_time_utc,
+        actual_arrival_time_utc
+    ) as actual_duration_minutes,
     case
         when flight_status = 'landed' then 'no'
         else 'yes'
