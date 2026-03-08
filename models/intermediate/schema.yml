@@ -33,9 +33,15 @@ models:
       - name: departure_airport_id
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_airports')
+              field: airport_id
       - name: arrival_airport_id
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_airports')
+              field: airport_id
       - name: flight_status
         tests:
           - accepted_values:
@@ -50,6 +56,9 @@ models:
       - name: airline_id
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_airline')
+              field: airline_id
       - name: flight_status
         tests:
           - accepted_values:
@@ -135,12 +144,21 @@ models:
       - name: flight_id
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_flight_details')
+              field: flight_id
       - name: operating_airline_id
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_airline')
+              field: airline_id
       - name: marketing_airline_id
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_airline')
+              field: airline_id
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
