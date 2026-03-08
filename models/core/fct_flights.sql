@@ -9,7 +9,7 @@ with flight_keys as (
         
        
 
-    from {{ ref ('int_flight_airline')}}
+    from {{ ref('int_flight_airline')}}
 ),
 
 route_keys as (
@@ -40,7 +40,7 @@ route_keys as (
         -- route level attributes --
         route_distance_km
 
-    from {{ ref ('int_flight_routes')}}
+    from {{ ref('int_flight_routes')}}
 
 )
 
