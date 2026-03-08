@@ -1,0 +1,148 @@
+version: 2
+
+models:
+  - name: int_airport_geography
+    columns:
+      - name: airport_id
+        tests:
+          - unique
+          - not_null
+      - name: country_id
+        tests:
+          - not_null:
+              severity: warn
+      - name: latitude
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -90
+              max_value: 90
+              severity: warn
+      - name: longitude
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -180
+              max_value: 180
+              severity: warn
+
+  - name: int_flight_airport
+    columns:
+      - name: flight_id
+        tests:
+          - unique
+          - not_null
+      - name: departure_airport_id
+        tests:
+          - not_null
+      - name: arrival_airport_id
+        tests:
+          - not_null
+      - name: flight_status
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled']
+
+  - name: int_flight_airline
+    columns:
+      - name: flight_id
+        tests:
+          - unique
+          - not_null
+      - name: airline_id
+        tests:
+          - not_null
+      - name: flight_status
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled']
+
+  - name: int_flight_routes
+    description: "Intermediate model that prepares route-level attributes for downstream fact and dimension models."
+    columns:
+      - name: flight_id
+        description: "Unique identifier for a flight record."
+        tests:
+          - unique
+          - not_null
+
+      - name: route_key
+        description: "Deterministic key representing the route between departure and arrival airports."
+        tests:
+          - not_null
+
+      - name: departure_airport_id
+        description: "Airport identifier for the departure airport."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_airports')
+              field: airport_id
+
+      - name: arrival_airport_id
+        description: "Airport identifier for the arrival airport."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_airports')
+              field: airport_id
+
+      - name: route_distance_km
+        description: "Distance between departure and arrival airports in kilometers."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+
+      - name: flight_status
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled']
+
+      - name: flight_status_clean
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled', 'data unavailable']
+
+      - name: scheduled_departure_time_utc
+        tests:
+          - not_null
+
+      - name: actual_departure_time_utc
+        tests:
+          - not_null:
+              where: "is_cancelled = false"
+
+      - name: actual_arrival_time_utc
+        tests:
+          - not_null:
+              where: "flight_status_clean = 'landed'"
+
+      - name: scheduled_duration_minutes
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1440
+              severity: warn
+
+      - name: departure_delay_minutes
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -120
+              max_value: 1440
+              severity: warn
+
+  - name: int_flight_codeshare
+    columns:
+      - name: flight_id
+        tests:
+          - not_null
+      - name: operating_airline_id
+        tests:
+          - not_null
+      - name: marketing_airline_id
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - flight_id
+            - marketing_airline_id
