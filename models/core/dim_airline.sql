@@ -4,7 +4,7 @@
 
 select 
     airline_id, -- primary key
-    airline_country_id, -- foreign key to dim_country
+    airline_country_id,  
 
     -- identifier codes 
     airline_iata_code,
