@@ -1,79 +1,89 @@
+-- Model: fct_flights
+-- Grain: 1 row per flight_id
+-- Purpose: Core flight fact table combining airline, route, and timing data
+--          to support flight performance, delay, and network analysis.
 
 with flight_keys as (
 
-    select 
-        flight_id, 
-
-         -- airline keys --
+    select
+        flight_id,
         airline_id
-        
-       
+    from {{ ref('int_flight_airline') }}
 
-    from {{ ref('int_flight_airline')}}
 ),
 
 route_keys as (
 
-    select 
-
-        --- join helper --
+    select
+        -- join key --
         flight_id,
 
-        -- route identifiers --
-        departure_airport_id, 
+        -- identifiers --
+        departure_airport_id,
         arrival_airport_id,
+        route_key,
+        flight_date,
+        flight_number,
 
-        -- route events -- 
+        -- timestamps --
         scheduled_departure_time_utc,
         scheduled_arrival_time_utc,
         actual_departure_time_utc,
         actual_arrival_time_utc,
 
-
-        -- operational events --
+        -- status --
         flight_status,
+        flight_status_clean,
         is_cancelled,
 
+        -- delay metrics --
+        departure_delay_minutes,
+        arrival_delay_minutes,
+
+        -- duration metrics --
         scheduled_duration_minutes,
         actual_duration_minutes,
 
-        -- route level attributes --
+        -- route attributes --
         route_distance_km
 
-    from {{ ref('int_flight_routes')}}
+    from {{ ref('int_flight_routes') }}
 
 )
 
-select 
-        fk.flight_id,
+select
+    -- identifiers --
+    fk.flight_id,
+    fk.airline_id as operating_airline_id,
+    rk.departure_airport_id,
+    rk.arrival_airport_id,
+    rk.route_key,
+    rk.flight_date,
+    rk.flight_number,
 
-        -- airline keys --
-        fk.airline_id as operating_airline_id,
+    -- timestamps --
+    rk.scheduled_departure_time_utc,
+    rk.scheduled_arrival_time_utc,
+    rk.actual_departure_time_utc,
+    rk.actual_arrival_time_utc,
 
-        -- route identifiers --
-        rk.departure_airport_id,
-        rk.arrival_airport_id,
+    -- status --
+    rk.flight_status,
+    rk.flight_status_clean,
+    rk.is_cancelled,
 
-        -- timestamps ---
+    -- delay metrics --
+    rk.departure_delay_minutes,
+    rk.arrival_delay_minutes,
 
-        rk.scheduled_departure_time_utc,
-        rk.scheduled_arrival_time_utc,
-        rk.actual_departure_time_utc,
-        rk.actual_arrival_time_utc,
+    -- duration and distance --
+    rk.scheduled_duration_minutes,
+    rk.actual_duration_minutes,
+    rk.route_distance_km
 
-        -- status --
-        rk.flight_status,
-        rk.is_cancelled,
-
-
-        -- metrics --
-        rk.scheduled_duration_minutes,
-        rk.actual_duration_minutes,
-        rk.route_distance_km
-
-    from flight_keys fk
-    left join route_keys rk 
-        on fk.flight_id = rk.flight_id
+from flight_keys fk
+left join route_keys rk
+    on fk.flight_id = rk.flight_id
 
 
 
