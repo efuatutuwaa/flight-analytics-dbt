@@ -22,8 +22,8 @@ select
     cc.country_continent,
     cc.country_currency_code
 
-from {{ ref ('stg_airports') }} a
-left join {{ ref ('stg_cities') }} c
+from {{ ref('stg_airports') }} a
+left join {{ ref('stg_cities') }} c
     on a.airport_city_id = c.city_id
-left join  {{ ref ('stg_countries') }} cc
+left join  {{ ref('stg_countries') }} cc
     on c.country_id = cc.country_id
