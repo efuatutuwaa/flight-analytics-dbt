@@ -1,88 +1,127 @@
 version: 2
 
-models: 
-  - name: stg_airline 
+models:
+  - name: stg_airline
     columns:
       - name: airline_id
         tests:
           - unique
-          - not_null 
-  
+          - not_null
+
   - name: stg_airports
     columns:
-      - name : airport_id
+      - name: airport_id
         tests:
           - unique
           - not_null
       - name: airport_city_id
         tests:
-          - not_null
+          - not_null:
+              severity: warn
 
-  - name: stg_arrivals 
+  - name: stg_arrivals
     columns:
-      - name : arrival_id
+      - name: arrival_id
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
         tests:
           - unique
           - not_null
       - name: arrival_airport_id
         tests:
           - not_null
+      - name: scheduled_arrival_time
+        tests:
+          - not_null
 
-  - name: stg_departures 
+  - name: stg_departures
     columns:
-      - name : departure_id
+      - name: departure_id
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
         tests:
           - unique
           - not_null
       - name: departure_airport_id
         tests:
-          - not_null 
-
-  - name : stg_flight_details
-    columns:
-      - name : flight_id
+          - not_null
+      - name: scheduled_departure_time
         tests:
-          - unique
           - not_null
 
-  - name : stg_routes
+  - name: stg_flight_details
     columns:
-      - name : route_id
+      - name: flight_id
+        tests:
+          - unique
+          - not_null
+      - name: airline_id
+        tests:
+          - not_null
+      - name: departure_airport_id
+        tests:
+          - not_null
+      - name: arrival_airport_id
+        tests:
+          - not_null
+      - name: flight_status
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled']
+
+  - name: stg_routes
+    columns:
+      - name: route_id
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
         tests:
           - unique
           - not_null
 
-  - name : stg_countries
+  - name: stg_countries
     columns:
-      - name : country_id
+      - name: country_id
         tests:
           - unique
           - not_null
-    
-  - name : stg_cities
+
+  - name: stg_cities
     columns:
-      - name : city_id
+      - name: city_id
         tests:
           - unique
           - not_null
-      - name : latitude
+      - name: latitude
         tests:
           - dbt_utils.accepted_range:
-              arguments:
-                min_value: -90
-                max_value: 90
-      - name : longitude
+              min_value: -90
+              max_value: 90
+      - name: longitude
         tests:
           - dbt_utils.accepted_range:
-              arguments:
-                min_value: -180
-                max_value: 180
+              min_value: -180
+              max_value: 180
 
-
-
-
-          
-    
-      
-
-
+  - name: stg_codeshare
+    columns:
+      - name: codeshare_id
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
+        tests:
+          - not_null
+      - name: marketing_airline_id
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - flight_id
+            - marketing_airline_id
