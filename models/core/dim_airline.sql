@@ -22,6 +22,7 @@ select
     -- date attributes
     airline_year_founded
 from {{ ref('stg_airline') }}
+where airline_id is not null
 
 
 
