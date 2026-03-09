@@ -31,6 +31,13 @@ with base as (
         dep.actual_departure_time as actual_departure_time_local,
         arr.actual_arrival_time as actual_arrival_time_local,
 
+        -- terminal and gate info --
+        dep.departure_terminal,
+        dep.departure_gate,
+        arr.arrival_terminal,
+        arr.arrival_gate,
+        arr.arrival_baggage_claim,
+
         -- scheduled times in utc --
         to_utc_timestamp(
             dep.scheduled_departure_time,
@@ -120,6 +127,13 @@ select
         scheduled_arrival_time_utc,
         actual_arrival_time_utc
     ) as arrival_delay_minutes,
+
+    -- terminal and gate info --
+    departure_terminal,
+    departure_gate,
+    arrival_terminal,
+    arrival_gate,
+    arrival_baggage_claim,
 
     -- status flags --
     (flight_status = 'cancelled') as is_cancelled,

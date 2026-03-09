@@ -139,6 +139,20 @@ models:
               max_value: 1440
               severity: warn
 
+      - name: arrival_gate
+        description: "Arrival gate assigned by the airport. Nulls expected due to API data availability limitations."
+        tests:
+          - not_null:
+              severity: warn
+              where: "flight_status_clean = 'landed'"
+
+      - name: arrival_baggage_claim
+        description: "Baggage claim belt assigned by the airport. Nulls expected due to API data availability limitations."
+        tests:
+          - not_null:
+              severity: warn
+              where: "flight_status_clean = 'landed'"
+
   - name: int_flight_codeshare
     columns:
       - name: flight_id

@@ -45,7 +45,14 @@ route_keys as (
         actual_duration_minutes,
 
         -- route attributes --
-        route_distance_km
+        route_distance_km,
+
+        -- terminal and gate info --
+        departure_terminal,
+        departure_gate,
+        arrival_terminal,
+        arrival_gate,
+        arrival_baggage_claim
 
     from {{ ref('int_flight_routes') }}
 
@@ -79,7 +86,14 @@ select
     -- duration and distance --
     rk.scheduled_duration_minutes,
     rk.actual_duration_minutes,
-    rk.route_distance_km
+    rk.route_distance_km,
+
+    -- terminal and gate info --
+    rk.departure_terminal,
+    rk.departure_gate,
+    rk.arrival_terminal,
+    rk.arrival_gate,
+    rk.arrival_baggage_claim
 
 from flight_keys fk
 left join route_keys rk
