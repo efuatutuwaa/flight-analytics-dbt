@@ -1,0 +1,194 @@
+version: 2
+
+models:
+  - name: dim_airline
+    description: "Airline dimension. One record per airline with descriptive and operational attributes."
+    columns:
+      - name: airline_id
+        description: "Primary key. Unique identifier for each airline."
+        meta:
+          primary_key: true
+        tests:
+          - unique
+          - not_null
+      - name: airline_iata_code
+        description: "IATA two-letter airline code."
+        tests:
+          - not_null:
+              severity: warn
+
+  - name: dim_airport
+    description: "Airport dimension. One record per airport with geographic, timezone, and location attributes."
+    columns:
+      - name: airport_id
+        description: "Primary key. Unique identifier for each airport."
+        meta:
+          primary_key: true
+        tests:
+          - unique
+          - not_null
+      - name: airport_iata_code
+        description: "IATA three-letter airport code."
+        tests:
+          - not_null:
+              severity: warn
+      - name: country_id
+        description: "Foreign key to the country this airport is located in."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+
+  - name: dim_routes
+    description: "Route dimension. One record per unique origin-destination airport pair."
+    columns:
+      - name: route_key
+        description: "Primary key. Derived key in format 'departure_airport_id-arrival_airport_id'."
+        meta:
+          primary_key: true
+        tests:
+          - unique
+          - not_null
+      - name: departure_airport_id
+        description: "Foreign key to dim_airport for the departure airport."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airport')
+              field: airport_id
+      - name: arrival_airport_id
+        description: "Foreign key to dim_airport for the arrival airport."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airport')
+              field: airport_id
+      - name: route_distance_km
+        description: "Average distance in kilometres between departure and arrival airports."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+      - name: route_label
+        description: "Human-readable route label in format 'IATA → IATA' (e.g. LHR → JFK)."
+      - name: is_international
+        description: "True if departure and arrival airports are in different countries."
+
+  - name: fct_flights
+    description: "Core flight fact table. One record per flight with timing, delay, and status metrics."
+    columns:
+      - name: flight_id
+        description: "Primary key. Unique identifier for each flight."
+        meta:
+          primary_key: true
+        tests:
+          - unique
+          - not_null
+      - name: operating_airline_id
+        description: "Foreign key to dim_airline for the airline operating the flight."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airline')
+              field: airline_id
+      - name: departure_airport_id
+        description: "Foreign key to dim_airport for the departure airport."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airport')
+              field: airport_id
+      - name: arrival_airport_id
+        description: "Foreign key to dim_airport for the arrival airport."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airport')
+              field: airport_id
+      - name: route_key
+        description: "Foreign key to dim_routes."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_routes')
+              field: route_key
+      - name: flight_date
+        description: "Date the flight was scheduled to operate."
+        tests:
+          - not_null
+      - name: flight_status
+        description: "Raw flight status from the source API. Values: landed, cancelled."
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled']
+      - name: flight_status_clean
+        description: "Cleaned flight status. 'data unavailable' flags landed flights with missing actual arrival time."
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled', 'data unavailable']
+      - name: scheduled_departure_time_utc
+        description: "Scheduled departure time converted to UTC."
+        tests:
+          - not_null
+      - name: departure_delay_minutes
+        description: "Minutes between scheduled and actual departure. Negative values indicate early departure."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -120
+              max_value: 1440
+              severity: warn
+
+  - name: fct_codeshare
+    description: "Codeshare fact table. One record per flight x marketing airline pair."
+    columns:
+      - name: flight_id
+        description: "Foreign key to fct_flights."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_flights')
+              field: flight_id
+      - name: operating_airline_id
+        description: "Foreign key to dim_airline for the airline physically operating the flight."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airline')
+              field: airline_id
+      - name: marketing_airline_id
+        description: "Foreign key to dim_airline for the airline selling the ticket."
+        meta:
+          foreign_key: true
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airline')
+              field: airline_id
+      - name: flight_status_clean
+        description: "Flight status inherited from fct_flights."
+        tests:
+          - accepted_values:
+              values: ['landed', 'cancelled', 'data unavailable']
+      - name: is_true_codeshare
+        description: "True when the operating and marketing airline differ."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - flight_id
+            - marketing_airline_id
