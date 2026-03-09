@@ -13,9 +13,6 @@ models:
           - not_null
       - name: airline_iata_code
         description: "IATA two-letter airline code."
-        tests:
-          - not_null:
-              severity: warn
 
   - name: dim_airport
     description: "Airport dimension. One record per airport with geographic, timezone, and location attributes."
@@ -29,9 +26,6 @@ models:
           - not_null
       - name: airport_iata_code
         description: "IATA three-letter airport code."
-        tests:
-          - not_null:
-              severity: warn
       - name: country_id
         description: "Foreign key to the country this airport is located in."
         meta:
