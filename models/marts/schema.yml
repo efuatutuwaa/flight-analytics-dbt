@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: mart_flight_performance
+    description: "Route-level flight performance metrics per airline per day."
+    columns:
+      - name: route_key
+        description: "Grain key. Derived route identifier in format 'departure_airport_id-arrival_airport_id'."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_routes')
+              field: route_key
+      - name: operating_airline_id
+        description: "Grain key. Foreign key to dim_airline for the operating airline."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airline')
+              field: airline_id
+      - name: flight_date
+        description: "Grain key. Date the flights were scheduled to operate."
+        tests:
+          - not_null
+      - name: total_flights
+        description: "Total number of flights for this route, airline, and date combination."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              severity: warn
+      - name: cancellation_rate
+        description: "Proportion of flights cancelled. Value between 0 and 1."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              severity: warn
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - route_key
+            - operating_airline_id
+            - flight_date
