@@ -24,3 +24,8 @@ __pycache__/
 
 # ---- Secrets ----
 profiles.yml
+.mcp.json
+.env
+
+# ---- Viz ----
+viz/.streamlit/
