@@ -42,6 +42,37 @@ models:
             - operating_airline_id
             - flight_date
 
+  - name: mart_route_performance
+    description: "Route-level flight performance metrics aggregated across all airlines and dates."
+    columns:
+      - name: route_key
+        description: "Grain key. Foreign key to dim_routes."
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_routes')
+              field: route_key
+      - name: total_flights
+        description: "Total number of flights operated on this route."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+      - name: airlines_competing
+        description: "Number of distinct airlines operating this route."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+      - name: cancellation_rate
+        description: "Proportion of flights cancelled. Value between 0 and 1."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              severity: warn
+
   - name: mart_airline_performance
     description: "Airline-level flight performance metrics aggregated across all routes and dates."
     columns:
