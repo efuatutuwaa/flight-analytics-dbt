@@ -66,7 +66,7 @@ AviationStack API
 
 ---
 
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```
 flight-analytics-dbt/
@@ -150,7 +150,7 @@ dbt test
 
 ---
 
-## 📐 Key dbt Concepts Demonstrated
+## 🔑 Key dbt Concepts Demonstrated
 
 - ✅ Multi-layer transformation architecture (staging → intermediate → core → marts)
 - ✅ Custom schema per layer (`staging_models`, `intermediate_models`, `core_models`, `mart_models`)
@@ -177,7 +177,17 @@ Planned views:
 
 ---
 
-## 🤝 Author
+## 🔗 Project Origin
+
+This project is the analytics engineering evolution of an earlier ETL pipeline built on the same dataset. The original project focused on raw data ingestion, staging, and storage using Python and AWS RDS (MySQL) — without a transformation layer.
+
+👉 **[View the original ETL project → data-driven-sql](https://github.com/efuatutuwaa/data-driven-sql)**
+
+That foundation informed the data modeling decisions made here, and this repo represents the next step: applying analytics engineering patterns — dbt, layered transformations, data quality, and a semantic layer — on top of a properly ingested dataset.
+
+---
+
+## 👤 Author
 
 **Efua Tutuwaa**
 Analytics Engineering Capstone — 2026
