@@ -5,7 +5,7 @@ view: mart_airline_performance {
   # Dimensions
   # -------------------------
 
-  dimension: operating_airline_id {
+  dimension: pk {
     type: string
     primary_key: yes
     hidden: yes

@@ -5,7 +5,7 @@ view: mart_route_performance {
   # Dimensions
   # -------------------------
 
-  dimension: route_key {
+  dimension: pk {
     type: string
     primary_key: yes
     hidden: yes

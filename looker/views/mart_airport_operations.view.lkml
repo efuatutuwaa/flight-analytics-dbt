@@ -5,7 +5,7 @@ view: mart_airport_operations {
   # Dimensions
   # -------------------------
 
-  dimension: airport_id {
+  dimension: pk {
     type: string
     primary_key: yes
     hidden: yes
