@@ -73,6 +73,36 @@ models:
               max_value: 1
               severity: warn
 
+  - name: mart_airport_operations
+    description: "Airport-level flight operations metrics aggregated across all departures and arrivals."
+    columns:
+      - name: airport_id
+        description: "Grain key. Foreign key to dim_airport."
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_airport')
+              field: airport_id
+      - name: total_departures
+        description: "Total number of flights departing from this airport."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+      - name: total_arrivals
+        description: "Total number of flights arriving at this airport."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+      - name: total_movements
+        description: "Total traffic at the airport. Sum of total_departures and total_arrivals."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+
   - name: mart_airline_performance
     description: "Airline-level flight performance metrics aggregated across all routes and dates."
     columns:
