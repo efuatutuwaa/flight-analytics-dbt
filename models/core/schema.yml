@@ -143,6 +143,19 @@ models:
               min_value: -120
               max_value: 1440
               severity: warn
+          - not_null:
+              where: "is_cancelled = false"
+              severity: warn
+      - name: arrival_delay_minutes
+        description: "Minutes between scheduled and actual arrival. Negative values indicate early arrival."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -120
+              max_value: 1440
+              severity: warn
+          - not_null:
+              where: "is_cancelled = false"
+              severity: warn
 
   - name: fct_codeshare
     description: "Codeshare fact table. One record per flight x marketing airline pair."
