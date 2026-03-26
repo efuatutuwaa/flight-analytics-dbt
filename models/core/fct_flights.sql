@@ -80,8 +80,9 @@ select
     rk.is_cancelled,
 
     -- delay metrics --
-    rk.departure_delay_minutes,
-    rk.arrival_delay_minutes,
+    -- values outside -120 to 1440 mins are likely timezone/data errors from source API
+    case when rk.departure_delay_minutes between -120 and 1440 then rk.departure_delay_minutes end as departure_delay_minutes,
+    case when rk.arrival_delay_minutes between -120 and 1440 then rk.arrival_delay_minutes end as arrival_delay_minutes,
 
     -- duration and distance --
     rk.scheduled_duration_minutes,
