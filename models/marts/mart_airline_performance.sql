@@ -8,6 +8,7 @@ select
     -- dimension attributes --
     a.airline_name,
     a.airline_icao_code,
+    a.airline_type,
     a.airline_fleet_size,
     a.airline_fleet_average_age,
 
@@ -30,6 +31,7 @@ left join {{ ref('dim_airline') }} a
 group by f.operating_airline_id,
          a.airline_name,
          a.airline_icao_code,
+         a.airline_type,
          a.airline_fleet_size,
          a.airline_fleet_average_age
 
