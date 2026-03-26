@@ -104,29 +104,38 @@ select
     actual_arrival_time_utc,
 
     -- derived metrics --
-    timestampdiff(
-        minute,
-        scheduled_departure_time_utc,
-        scheduled_arrival_time_utc
-    ) as scheduled_duration_minutes,
+    case
+        when scheduled_departure_time_utc is null
+            or scheduled_arrival_time_utc is null then null
+        else timestampdiff(minute,
+            scheduled_departure_time_utc,
+            scheduled_arrival_time_utc)
+    end as scheduled_duration_minutes,
 
-    timestampdiff(
-        minute,
-        actual_departure_time_utc,
-        actual_arrival_time_utc
-    ) as actual_duration_minutes,
+    case
+        when actual_departure_time_utc is null
+            or actual_arrival_time_utc is null then null
+        else timestampdiff(minute,
+            actual_departure_time_utc,
+            actual_arrival_time_utc)
+    end as actual_duration_minutes,
+   
 
-    timestampdiff(
-        minute,
-        scheduled_departure_time_utc,
-        actual_departure_time_utc
-    ) as departure_delay_minutes,
+    case
+        when actual_departure_time_utc is null
+            or scheduled_departure_time_utc is null then null
+        else timestampdiff(minute,
+            scheduled_departure_time_utc,
+            actual_departure_time_utc)
+    end as departure_delay_minutes,
 
-    timestampdiff(
-        minute,
-        scheduled_arrival_time_utc,
-        actual_arrival_time_utc
-    ) as arrival_delay_minutes,
+    case
+        when actual_arrival_time_utc is null
+            or scheduled_arrival_time_utc is null then null
+        else timestampdiff(minute,
+            scheduled_arrival_time_utc,
+            actual_arrival_time_utc)
+    end as arrival_delay_minutes,
 
     -- terminal and gate info --
     departure_terminal,
