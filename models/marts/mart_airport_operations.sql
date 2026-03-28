@@ -3,33 +3,33 @@
 
 with departures as (
     select
-        departure_airport_id as airport_id,
-        count(flight_id) as total_departures,
-        sum(case when is_cancelled = true then 1 else 0 end) as cancelled_departures,
-        round(avg(case when is_cancelled = false then departure_delay_minutes end), 2) as avg_departure_delay_minutes,
-        sum(case when departure_delay_minutes < 15 and is_cancelled = false then 1 else 0 end) as on_time_departures,
-        sum(case when departure_delay_minutes >= 15 and is_cancelled = false then 1 else 0 end) as delayed_departures
-    from {{ ref('fct_flights') }}
+        departure_airport_id                            as airport_id,
+        count(flight_id)                                as total_departures,
+        sum(cancelled_flag)                             as cancelled_departures,
+        round(avg(departure_delay_minutes_operated), 2) as avg_departure_delay_minutes,
+        sum(is_on_time_departure)                       as on_time_departures,
+        sum(is_delayed_departure)                       as delayed_departures
+    from {{ ref('int_flight_metrics') }}
     group by departure_airport_id
 ),
 
 arrivals as (
     select
-        arrival_airport_id as airport_id,
-        count(flight_id) as total_arrivals,
-        sum(case when is_cancelled = true then 1 else 0 end) as cancelled_arrivals,
-        round(avg(case when is_cancelled = false then arrival_delay_minutes end), 2) as avg_arrival_delay_minutes,
-        sum(case when arrival_delay_minutes < 15 and is_cancelled = false then 1 else 0 end) as on_time_arrivals,
-        sum(case when arrival_delay_minutes >= 15 and is_cancelled = false then 1 else 0 end) as delayed_arrivals
-    from {{ ref('fct_flights') }}
+        arrival_airport_id                              as airport_id,
+        count(flight_id)                                as total_arrivals,
+        sum(cancelled_flag)                             as cancelled_arrivals,
+        round(avg(arrival_delay_minutes_operated), 2)   as avg_arrival_delay_minutes,
+        sum(is_on_time_arrival)                         as on_time_arrivals,
+        sum(is_delayed_arrival)                         as delayed_arrivals
+    from {{ ref('int_flight_metrics') }}
     group by arrival_airport_id
 )
 
 select
-    -- grain key --
+    -- grain key
     d.airport_id,
 
-    -- dimension attributes --
+    -- dimension attributes
     d.airport_name,
     d.airport_iata_code,
     d.city_name,
@@ -38,23 +38,23 @@ select
     d.latitude,
     d.longitude,
 
-    -- departure volumes --
+    -- departure volumes
     dep.total_departures,
     dep.cancelled_departures,
 
-    -- arrival volumes --
+    -- arrival volumes
     arr.total_arrivals,
     arr.cancelled_arrivals,
 
-    -- total traffic --
+    -- total traffic
     coalesce(dep.total_departures, 0) + coalesce(arr.total_arrivals, 0) as total_movements,
 
-    -- departure performance --
+    -- departure performance
     dep.avg_departure_delay_minutes,
     dep.on_time_departures,
     dep.delayed_departures,
 
-    -- arrival performance --
+    -- arrival performance
     arr.avg_arrival_delay_minutes,
     arr.on_time_arrivals,
     arr.delayed_arrivals

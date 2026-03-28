@@ -172,6 +172,25 @@ models:
               max_value: 1440
               severity: warn
 
+  - name: int_flight_metrics
+    description: "Pre-classifies each flight with performance flags and operated-only columns. Single source of truth for on-time, delayed, and cancelled business rules."
+    columns:
+      - name: flight_id
+        description: "Unique identifier for a flight record."
+        tests:
+          - unique
+          - not_null
+      - name: cancelled_flag
+        description: "Integer representation of is_cancelled (1 = cancelled, 0 = operated). For use in sum() aggregations."
+      - name: is_on_time_departure
+        description: "1 if the flight departed fewer than 15 minutes late and was not cancelled, else 0."
+      - name: is_delayed_departure
+        description: "1 if the flight departed 15 or more minutes late and was not cancelled, else 0."
+      - name: is_on_time_arrival
+        description: "1 if the flight arrived fewer than 15 minutes late and was not cancelled, else 0."
+      - name: is_delayed_arrival
+        description: "1 if the flight arrived 15 or more minutes late and was not cancelled, else 0."
+
   - name: int_flight_codeshare
     columns:
       - name: flight_id
