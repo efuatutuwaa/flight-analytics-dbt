@@ -2,124 +2,284 @@ version: 2
 
 models:
   - name: stg_airline
+    description: "Cleaned airline records from the source API. One row per airline."
     columns:
       - name: airline_id
+        description: "Primary key. Unique identifier for each airline."
         tests:
           - unique
           - not_null
+      - name: airline_iata_code
+        description: "IATA two-letter airline code. Null if unknown or not assigned."
+      - name: airline_icao_code
+        description: "ICAO four-letter airline code. Null if unknown or not assigned."
+      - name: airline_name
+        description: "Full commercial name of the airline."
+      - name: airline_type
+        description: "Operational type of the airline (e.g. scheduled, charter, cargo). Null if unknown."
+      - name: airline_country_name
+        description: "Country where the airline is registered."
+      - name: airline_country_id
+        description: "Foreign key to stg_countries."
+      - name: airline_fleet_size
+        description: "Number of aircraft in the airline's active fleet."
+      - name: airline_fleet_average_age
+        description: "Average age of the airline's fleet in years."
+      - name: airline_year_founded
+        description: "Year the airline was founded. Null when source value is 1900 (ingestion artefact)."
 
   - name: stg_airports
+    description: "Cleaned airport records from the source API. One row per airport."
     columns:
       - name: airport_id
+        description: "Primary key. Unique identifier for each airport."
         tests:
           - unique
           - not_null
+      - name: airport_iata_code
+        description: "IATA three-letter airport code. Null if unknown or not assigned."
+      - name: airport_icao_code
+        description: "ICAO four-letter airport code. Null if unknown or not assigned."
+      - name: airport_name
+        description: "Full name of the airport."
       - name: airport_city_id
+        description: "Foreign key to stg_cities."
         tests:
           - not_null:
               severity: warn
+      - name: airport_timezone_name
+        description: "IANA timezone name for the airport (e.g. Europe/London). Used for UTC conversion."
+      - name: airport_gmt_offset
+        description: "GMT offset string for the airport timezone."
+      - name: latitude
+        description: "Geographic latitude of the airport in decimal degrees."
+      - name: longitude
+        description: "Geographic longitude of the airport in decimal degrees."
 
   - name: stg_arrivals
+    description: "Cleaned arrival records from the source API. One row per flight arrival event."
     columns:
       - name: arrival_id
+        description: "Primary key. Unique identifier for each arrival record."
         tests:
           - unique
           - not_null
       - name: flight_id
+        description: "Foreign key to stg_flight_details."
         tests:
           - unique
           - not_null
       - name: arrival_airport_id
+        description: "Foreign key to stg_airports for the arrival airport."
         tests:
           - not_null
+      - name: arrival_airport_iata_code
+        description: "IATA code of the arrival airport. Null if unknown."
+      - name: arrival_airport_icao_code
+        description: "ICAO code of the arrival airport. Null if unknown."
+      - name: arrival_airport_name
+        description: "Name of the arrival airport."
+      - name: arrival_terminal
+        description: "Terminal at the arrival airport. Null if not provided by the API."
+      - name: arrival_gate
+        description: "Gate at the arrival airport. Null if not provided by the API."
+      - name: arrival_baggage_claim
+        description: "Baggage claim belt assigned at the arrival airport. Null if not provided."
+      - name: arrival_timezone
+        description: "IANA timezone name of the arrival airport."
       - name: scheduled_arrival_time
+        description: "Scheduled arrival time in the airport's local timezone."
         tests:
           - not_null
+      - name: estimated_arrival_time
+        description: "Estimated arrival time in the airport's local timezone. May be null before departure."
+      - name: actual_arrival_time
+        description: "Actual arrival time in the airport's local timezone. Null for cancelled or in-flight records."
+      - name: estimated_arrival_runway_time
+        description: "Estimated runway touchdown time."
+      - name: actual_arrival_runway_time
+        description: "Actual runway touchdown time."
+      - name: arrival_delay_minutes
+        description: "Arrival delay in minutes as reported by the source API. Positive = late."
 
   - name: stg_departures
+    description: "Cleaned departure records from the source API. One row per flight departure event."
     columns:
       - name: departure_id
+        description: "Primary key. Unique identifier for each departure record."
         tests:
           - unique
           - not_null
       - name: flight_id
+        description: "Foreign key to stg_flight_details."
         tests:
           - unique
           - not_null
       - name: departure_airport_id
+        description: "Foreign key to stg_airports for the departure airport."
         tests:
           - not_null
+      - name: departure_airport_iata_code
+        description: "IATA code of the departure airport. Null if unknown."
+      - name: departure_airport_icao_code
+        description: "ICAO code of the departure airport. Null if unknown."
+      - name: departure_airport_name
+        description: "Name of the departure airport."
+      - name: departure_terminal
+        description: "Terminal at the departure airport. Null if not provided by the API."
+      - name: departure_gate
+        description: "Gate at the departure airport. Null if not provided by the API."
+      - name: departure_timezone
+        description: "IANA timezone name of the departure airport."
       - name: scheduled_departure_time
+        description: "Scheduled departure time in the airport's local timezone."
         tests:
           - not_null
+      - name: estimated_departure_time
+        description: "Estimated departure time in the airport's local timezone."
+      - name: actual_departure_time
+        description: "Actual departure time in the airport's local timezone. Null for cancelled flights."
+      - name: estimated_departure_runway_time
+        description: "Estimated runway takeoff time."
+      - name: actual_departure_runway_time
+        description: "Actual runway takeoff time."
+      - name: departure_delay_minutes
+        description: "Departure delay in minutes as reported by the source API. Positive = late."
 
   - name: stg_flight_details
+    description: "Cleaned flight details from the source API. One row per flight. Central entity linking airline, airports, and schedule."
     columns:
       - name: flight_id
+        description: "Primary key. Unique identifier for each flight."
         tests:
           - unique
           - not_null
       - name: airline_id
+        description: "Foreign key to stg_airline."
         tests:
           - not_null
       - name: departure_airport_id
+        description: "Foreign key to stg_airports for the departure airport."
         tests:
           - not_null
       - name: arrival_airport_id
+        description: "Foreign key to stg_airports for the arrival airport."
         tests:
           - not_null
+      - name: flight_date
+        description: "Scheduled date of the flight."
       - name: flight_status
+        description: "Raw flight status from the source API."
         tests:
           - accepted_values:
               values: ['landed', 'cancelled']
+      - name: flight_number
+        description: "Airline-assigned flight number."
+      - name: flight_icao
+        description: "ICAO flight identifier. Null if unknown."
+      - name: flight_iata
+        description: "IATA flight identifier. Null if unknown."
 
   - name: stg_routes
+    description: "Cleaned route records from the source API. One row per flight route, carrying schedule and geometry."
     columns:
       - name: route_id
+        description: "Primary key. Unique identifier for each route record."
         tests:
           - unique
           - not_null
       - name: flight_id
+        description: "Foreign key to stg_flight_details."
         tests:
           - unique
           - not_null
+      - name: airline_id
+        description: "Foreign key to stg_airline."
+      - name: departure_airport_id
+        description: "Foreign key to stg_airports for the departure airport."
+      - name: arrival_airport_id
+        description: "Foreign key to stg_airports for the arrival airport."
+      - name: route_distance_km
+        description: "Distance between departure and arrival airports in kilometres."
+      - name: route_duration
+        description: "Scheduled route duration as provided by the source API."
+      - name: scheduled_departure_time
+        description: "Scheduled departure time for this route."
+      - name: scheduled_arrival_time
+        description: "Scheduled arrival time for this route."
 
   - name: stg_countries
+    description: "Cleaned country reference data. One row per country."
     columns:
       - name: country_id
+        description: "Primary key. Unique identifier for each country."
         tests:
           - unique
           - not_null
+      - name: country_iso_code
+        description: "ISO 3166-1 alpha-3 country code (e.g. GBR, USA)."
+      - name: country_name
+        description: "Full English name of the country."
+      - name: country_capital
+        description: "Capital city of the country."
+      - name: country_continent
+        description: "Continent the country belongs to."
+      - name: country_population
+        description: "Population of the country."
+      - name: country_currency_name
+        description: "Name of the country's official currency. Null if unknown."
+      - name: country_currency_code
+        description: "ISO 4217 currency code (e.g. GBP, USD). Null if unknown."
 
   - name: stg_cities
+    description: "Cleaned city reference data. One row per city."
     columns:
       - name: city_id
+        description: "Primary key. Unique identifier for each city."
         tests:
           - unique
           - not_null
+      - name: country_id
+        description: "Foreign key to stg_countries."
+      - name: city_name
+        description: "Name of the city."
       - name: latitude
+        description: "Geographic latitude of the city in decimal degrees."
         tests:
           - dbt_utils.accepted_range:
               min_value: -90
               max_value: 90
       - name: longitude
+        description: "Geographic longitude of the city in decimal degrees."
         tests:
           - dbt_utils.accepted_range:
               min_value: -180
               max_value: 180
+      - name: city_timezone
+        description: "IANA timezone name for the city."
+      - name: city_gmt_offset
+        description: "GMT offset for the city timezone."
 
   - name: stg_codeshare
+    description: "Cleaned codeshare records from the source API. One row per flight x marketing airline pair."
     columns:
       - name: codeshare_id
+        description: "Primary key. Unique identifier for each codeshare record."
         tests:
           - unique
           - not_null
       - name: flight_id
+        description: "Foreign key to stg_flight_details. The flight being marketed under a codeshare."
         tests:
           - not_null
+      - name: codeshare_flight_number
+        description: "Flight number used by the marketing airline for this codeshare."
       - name: marketing_airline_id
+        description: "Foreign key to stg_airline for the airline selling the codeshare ticket."
         tests:
           - not_null
+      - name: marketing_airline_name
+        description: "Name of the marketing airline."
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
