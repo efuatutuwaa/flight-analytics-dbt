@@ -3,6 +3,7 @@ import plotly.express as px
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from utils.db import query
+from utils.theme import apply_theme, PERF_SCALE, BLUE_SCALE
 
 st.set_page_config(page_title="Airport Operations", page_icon="🏢", layout="wide")
 
@@ -38,7 +39,7 @@ c4.metric("Avg On-Time Departure Rate",
 
 st.divider()
 
-# chart 1 — busiest airports by total movements
+# chart 1 — busiest airports
 st.subheader(f"Top {top_n} Busiest Airports")
 busy_df = filtered.nlargest(top_n, "total_movements")
 fig1 = px.bar(
@@ -47,19 +48,15 @@ fig1 = px.bar(
     y="airport_iata_code",
     orientation="h",
     color="total_movements",
-    color_continuous_scale="Blues",
+    color_continuous_scale=BLUE_SCALE,
     hover_data=["airport_name", "city_name", "country_name"],
     labels={"total_movements": "Total Movements", "airport_iata_code": "Airport"}
 )
-fig1.update_layout(
-    coloraxis_showscale=False,
-    yaxis={"categoryorder": "total ascending"},
-    plot_bgcolor="white",
-    paper_bgcolor="white"
-)
+fig1.update_layout(yaxis={"categoryorder": "total ascending"})
+apply_theme(fig1, height=480)
 st.plotly_chart(fig1, use_container_width=True)
 
-# chart 2 — on-time departure rate by airport
+# chart 2 — on-time departure rate
 st.subheader(f"On-Time Departure Rate — Top {top_n} Busiest Airports")
 rate_df = busy_df.copy()
 rate_df["on_time_departure_rate"] = rate_df["on_time_departures"] / (
@@ -72,14 +69,10 @@ fig2 = px.bar(
     x="airport_iata_code",
     y="on_time_departure_rate",
     color="on_time_departure_rate",
-    color_continuous_scale=["#e74c3c", "#f39c12", "#1f4e79"],
+    color_continuous_scale=PERF_SCALE,
     hover_data=["airport_name", "city_name"],
     labels={"airport_iata_code": "Airport", "on_time_departure_rate": "On-Time Rate"}
 )
-fig2.update_layout(
-    coloraxis_showscale=False,
-    yaxis_tickformat=".0%",
-    plot_bgcolor="white",
-    paper_bgcolor="white"
-)
+fig2.update_layout(yaxis_tickformat=".0%")
+apply_theme(fig2)
 st.plotly_chart(fig2, use_container_width=True)

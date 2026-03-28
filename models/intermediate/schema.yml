@@ -64,8 +64,8 @@ models:
           - accepted_values:
               values: ['landed', 'cancelled']
 
-  - name: int_flight_routes
-    description: "Intermediate model that prepares route-level attributes for downstream fact and dimension models."
+  - name: int_flight_routes_spine
+    description: "Joins flight details with route geometry, departure/arrival timestamps, and airport timezone data. UTC conversion applied here. No derived metrics."
     columns:
       - name: flight_id
         description: "Unique identifier for a flight record."
@@ -106,14 +106,37 @@ models:
           - accepted_values:
               values: ['landed', 'cancelled']
 
+      - name: scheduled_departure_time_utc
+        description: "Scheduled departure time converted to UTC."
+        tests:
+          - not_null
+
+      - name: arrival_gate
+        description: "Arrival gate assigned by the airport. Nulls expected due to API data availability limitations."
+        tests:
+          - not_null:
+              severity: warn
+
+      - name: arrival_baggage_claim
+        description: "Baggage claim belt assigned by the airport. Nulls expected due to API data availability limitations."
+        tests:
+          - not_null:
+              severity: warn
+
+  - name: int_flight_routes_metrics
+    description: "Derives delay, duration, and status metrics from int_flight_routes_spine. All flight timing business logic lives here."
+    columns:
+      - name: flight_id
+        description: "Unique identifier for a flight record."
+        tests:
+          - unique
+          - not_null
+
       - name: flight_status_clean
+        description: "Cleaned status. 'data unavailable' flags landed flights missing actual arrival time."
         tests:
           - accepted_values:
               values: ['landed', 'cancelled', 'data unavailable']
-
-      - name: scheduled_departure_time_utc
-        tests:
-          - not_null
 
       - name: actual_departure_time_utc
         tests:
@@ -126,6 +149,7 @@ models:
               where: "flight_status_clean = 'landed'"
 
       - name: scheduled_duration_minutes
+        description: "Scheduled flight duration in minutes. Null if either scheduled timestamp is missing."
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
@@ -133,25 +157,20 @@ models:
               severity: warn
 
       - name: departure_delay_minutes
+        description: "Minutes between scheduled and actual departure. Null if outside -120 to 1440 range (timezone artefact)."
         tests:
           - dbt_utils.accepted_range:
               min_value: -120
               max_value: 1440
               severity: warn
 
-      - name: arrival_gate
-        description: "Arrival gate assigned by the airport. Nulls expected due to API data availability limitations."
+      - name: arrival_delay_minutes
+        description: "Minutes between scheduled and actual arrival. Null if outside -120 to 1440 range (timezone artefact)."
         tests:
-          - not_null:
+          - dbt_utils.accepted_range:
+              min_value: -120
+              max_value: 1440
               severity: warn
-              where: "flight_status_clean = 'landed'"
-
-      - name: arrival_baggage_claim
-        description: "Baggage claim belt assigned by the airport. Nulls expected due to API data availability limitations."
-        tests:
-          - not_null:
-              severity: warn
-              where: "flight_status_clean = 'landed'"
 
   - name: int_flight_codeshare
     columns:

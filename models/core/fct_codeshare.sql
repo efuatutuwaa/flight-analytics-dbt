@@ -23,5 +23,5 @@ select
     (cs.operating_airline_id != cs.marketing_airline_id) as is_true_codeshare
 
 from {{ ref('int_flight_codeshare') }} cs
-left join {{ ref('int_flight_routes') }} fr
+left join {{ ref('int_flight_routes_metrics') }} fr
     on cs.flight_id = fr.flight_id;
