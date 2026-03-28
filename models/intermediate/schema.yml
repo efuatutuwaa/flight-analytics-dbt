@@ -172,6 +172,35 @@ models:
               max_value: 1440
               severity: warn
 
+  - name: int_routes_spine
+    description: "Collapses flight-level route records to route grain. One row per unique departure-arrival airport pair."
+    columns:
+      - name: route_key
+        description: "Primary key. Derived key in format 'departure_airport_id-arrival_airport_id'."
+        tests:
+          - unique
+          - not_null
+      - name: departure_airport_id
+        description: "Airport identifier for the departure airport."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_airports')
+              field: airport_id
+      - name: arrival_airport_id
+        description: "Airport identifier for the arrival airport."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_airports')
+              field: airport_id
+      - name: route_distance_km
+        description: "Average distance in kilometres between departure and arrival airports."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+
   - name: int_flight_metrics
     description: "Pre-classifies each flight with performance flags and operated-only columns. Single source of truth for on-time, delayed, and cancelled business rules."
     columns:
