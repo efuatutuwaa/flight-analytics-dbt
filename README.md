@@ -1,6 +1,6 @@
 # ✈️ Flight Analytics — dbt Capstone Project
 
-> An end-to-end analytics engineering project that models real-world flight data from the **AviationStack API** using **dbt** and **Databricks**. Built to demonstrate production-grade data modelling, transformation layering, and data quality practices following the **Bolt Data Modelling standard**.
+> An end-to-end analytics engineering project that models real-world flight data from the **AviationStack API** using **dbt** and **Databricks**. Built to demonstrate production-grade data modelling, transformation layering, and data quality practices.
 
 ---
 
