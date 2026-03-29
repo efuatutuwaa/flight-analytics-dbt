@@ -30,3 +30,8 @@ profiles.yml
 
 # ---- Viz ----
 viz/.streamlit/
+
+# ---- Semantic layer (planned for a future project) ----
+looker/
+models/semantic/
+models/metrics/

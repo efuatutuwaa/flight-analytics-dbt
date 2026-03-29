@@ -1,12 +1,12 @@
 # ✈️ Flight Analytics — dbt Capstone Project
 
-> An end-to-end analytics engineering project that models real-world flight data from the **AviationStack API** using **dbt** and **Databricks**. Built to demonstrate production-grade data modeling, transformation layering, semantic layer design, and data quality practices.
+> An end-to-end analytics engineering project that models real-world flight data from the **AviationStack API** using **dbt** and **Databricks**. Built to demonstrate production-grade data modelling, transformation layering, and data quality practices following the **Bolt Data Modelling standard**.
 
 ---
 
 ## 📌 Project Overview
 
-This project ingests live flight data from the AviationStack API and transforms it through a structured multi-layer dbt pipeline into analysis-ready data marts. It answers five core business questions about the global aviation network:
+This project ingests flight data from the AviationStack API and transforms it through a structured multi-layer dbt pipeline into analysis-ready data marts. It answers five core business questions about the global aviation network:
 
 | Domain | Business Question |
 |---|---|
@@ -30,29 +30,26 @@ AviationStack API
 ┌─────────────────────────────────────────────────────┐
 │                   dbt Pipeline                       │
 │                                                      │
-│  staging/       →  Raw API data cleaned & typed      │
-│  intermediate/  →  Business logic & joins            │
-│  core/          →  Reusable shared entities          │
-│  marts/         →  Analysis-ready fact/dim tables    │
-│  semantic/      →  MetricFlow semantic models        │
+│  staging/       →  Raw API data cleaned & renamed    │
+│  intermediate/  →  Spine joins, metrics, flags       │
+│  core/          →  Shared dims, facts, codeshare     │
+│  marts/         →  Analysis-ready aggregated tables  │
 └─────────────────────────────────────────────────────┘
        │
        ▼
   Databricks (cloud warehouse)
        │
-       ├──────────────────────┐
-       ▼                      ▼
-  LookML (looker/)       Streamlit (viz/)
-  Semantic layer         Interactive dashboard
+       ▼
+  Streamlit (viz/)
+  Interactive dashboard
 ```
 
 ### Layer Responsibilities
 
-- **Staging** — 1:1 with source tables. Renames columns, casts types, and applies light cleaning. No joins.
-- **Intermediate** — Applies business logic, resolves relationships, and prepares enriched entities for downstream use.
-- **Core** — Shared, reusable building blocks (e.g. resolved flight entities, carrier dimensions) referenced across multiple marts.
-- **Marts** — Domain-oriented, analysis-ready tables. Each mart maps to one of the five business domains above.
-- **Semantic** — MetricFlow semantic models and metric definitions built on top of core models (in progress).
+- **Staging** — 1:1 with source tables. Renames columns, casts types, applies light cleaning. No joins, no aggregations. Materialised as views.
+- **Intermediate** — Three model types per Bolt standard: `*_spine` (joins), `*_metrics` (derived flags and pre-classified columns), `*_features` (complex derivations). Business logic lives here, not in exposed models.
+- **Core** — Shared, reusable dimensions and facts (`dim_*`, `fct_*`). SQL is SELECT...FROM...JOIN only — no business logic.
+- **Marts** — Domain-oriented aggregated tables. Reference `int_*_metrics` models so no business logic is repeated across marts.
 
 ---
 
@@ -60,11 +57,9 @@ AviationStack API
 
 | Tool | Role |
 |---|---|
-| [AviationStack API](https://aviationstack.com/) | Data source — real-time & historical flight data |
+| [AviationStack API](https://aviationstack.com/) | Data source — real-world flight data |
 | [dbt Core](https://docs.getdbt.com/) | Data transformation framework |
 | [Databricks](https://www.databricks.com/) | Cloud analytical data warehouse |
-| [LookML](https://cloud.google.com/looker/docs/what-is-lookml) | Semantic layer for Looker BI |
-| [MetricFlow](https://docs.getdbt.com/docs/build/about-metricflow) | dbt semantic layer (in progress) |
 | [Streamlit](https://streamlit.io/) | Interactive data visualisation |
 | Python | API ingestion scripts |
 | dbt tests | Data quality validation |
@@ -76,18 +71,14 @@ AviationStack API
 ```
 flight-analytics-dbt/
 ├── models/
-│   ├── staging/          # Source-aligned models + tests
-│   ├── intermediate/     # Business logic layer + tests
-│   ├── core/             # Shared entities + tests
-│   ├── marts/            # Domain marts + tests
-│   └── semantic/         # MetricFlow semantic models (in progress)
-├── looker/               # LookML semantic layer
-│   ├── flight_analytics.model.lkml
-│   └── views/            # One view per mart
+│   ├── staging/          # Source-aligned models (views) + tests
+│   ├── intermediate/     # Spine, metrics, and feature models + tests
+│   ├── core/             # Shared dims and facts + tests
+│   └── marts/            # Domain-aggregated marts + tests
 ├── viz/                  # Streamlit dashboard
 │   ├── app.py            # Home page
 │   ├── pages/            # One page per business domain
-│   └── utils/            # Shared DB connection utility
+│   └── utils/            # Shared DB connection + theme utility
 ├── scripts/              # AviationStack API ingestion
 ├── seeds/                # Static reference data
 ├── snapshots/            # SCD type-2 tracking
@@ -137,74 +128,68 @@ cd viz && streamlit run app.py
 
 ## 🧪 Data Quality
 
-Tests are defined at every layer of the pipeline — staging, intermediate, and marts. Coverage includes:
+Tests are defined at every layer of the pipeline. Coverage includes:
 
-- **Uniqueness** — Primary key uniqueness enforced on all mart and core models
+- **Uniqueness** — Primary key uniqueness enforced on all core and mart models
 - **Not-null** — Critical fields validated across all layers
-- **Accepted values** — Flight status, delay categories, and other enumerations validated
+- **Accepted values** — Flight status and enumerations validated
 - **Referential integrity** — Relationships between flights, routes, airports, and carriers tested
 - **Conditional not-null** — Delay minutes validated as non-null for non-cancelled flights
 - **Range checks** — Delay values validated within realistic bounds (-120 to 1440 mins)
 
-Run all tests with:
 ```bash
 dbt test
 ```
 
 ---
 
-## 📊 Data Marts
+## 📊 Data Models
+
+### Core
+
+| Model | Grain | Description |
+|---|---|---|
+| `fct_flights` | 1 row per flight | Core flight fact — timing, delay, duration, and status |
+| `dim_airline` | 1 row per airline | Airline attributes — name, type, fleet info |
+| `dim_airport` | 1 row per airport | Airport attributes — location, timezone, geography |
+| `dim_routes` | 1 row per route | Route geometry — distance, label, international flag |
+| `fct_codeshare` | 1 row per flight × marketing airline | Operating vs. marketing airline pairings |
+
+### Marts
 
 | Mart | Grain | Description |
 |---|---|---|
-| `fct_flights` | 1 row per flight | Core flight fact — timing, delay, and status metrics |
-| `mart_airline_performance` | 1 row per airline | Carrier-level flight volumes, on-time performance, and reliability |
-| `mart_route_performance` | 1 row per route | Route efficiency — delays, cancellations, duration, and competition |
-| `mart_airport_operations` | 1 row per airport | Airport traffic volumes and departure/arrival performance |
-| `fct_codeshare` | 1 row per flight × marketing airline | Marketing vs. operating airline codeshare relationships |
+| `mart_flight_performance` | route + airline + date | Daily route-level performance per carrier |
+| `mart_airline_performance` | 1 row per airline | Carrier-level volumes, on-time rate, reliability |
+| `mart_route_performance` | 1 row per route | Route efficiency — delays, cancellations, duration |
+| `mart_airport_operations` | 1 row per airport | Airport traffic volumes and performance |
 
 ---
 
-## 🔍 Semantic Layer
-
-### LookML (`looker/`)
-Looker semantic layer built on top of the dbt marts. Defines dimensions, measures, and explores for self-serve analytics in Looker.
-
-- `mart_airline_performance.view.lkml` — Airline dimensions and performance measures
-- `mart_route_performance.view.lkml` — Route dimensions and efficiency measures
-- `mart_airport_operations.view.lkml` — Airport dimensions and traffic measures
-- `flight_analytics.model.lkml` — Explores for each business domain
-
-### MetricFlow (`models/semantic/`)
-dbt native semantic layer using MetricFlow. Defines reusable metric definitions on top of core fact tables. *(In progress)*
-
----
-
-## 🔑 Key dbt Concepts Demonstrated
-
-- ✅ Multi-layer transformation architecture (staging → intermediate → core → marts)
-- ✅ Custom schema per layer (`staging_models`, `intermediate_models`, `core_models`, `mart_models`)
-- ✅ Kimball-style dimensional modeling (facts, dimensions, grain design)
-- ✅ Data quality guards at the intermediate layer (null timestamp protection)
-- ✅ LookML semantic layer on top of dbt marts
-- ✅ dbt Semantic Layer with MetricFlow (in progress)
-- ✅ Snapshots for slowly changing dimension (SCD) tracking
-- ✅ Reusable Jinja macros
-- ✅ dbt packages (via `packages.yml`)
-- ✅ Data quality tests at every layer
-- ✅ Seeds for static reference data
-
----
-
-## 📈 Visualizations
+## 📈 Visualisations
 
 Interactive dashboard built with **Streamlit**, querying mart models directly from Databricks.
 
 | Page | Business Question |
 |---|---|
 | Airline Performance | On-time rates, delay scatter, and cancellation rates by airline |
-| Route Performance | Most delayed routes treemap and route network analysis |
-| Airport Operations | Busiest airports and on-time departure rates by airport |
+| Route Performance | Most delayed routes and route network treemap |
+| Airport Operations | Busiest airports and on-time departure rates |
+
+---
+
+## 🔑 Key Concepts Demonstrated
+
+- ✅ Bolt Data Modelling standard — spine/metrics/features intermediate pattern
+- ✅ Multi-layer transformation architecture (staging → intermediate → core → marts)
+- ✅ Exposed model purity — no business logic in `dim_*`, `fct_*`, or mart SQL
+- ✅ Metrics defined once in `int_flight_metrics`, aggregated upward by all marts
+- ✅ Custom schema per layer (`staging_models`, `intermediate_models`, `core_models`, `mart_models`)
+- ✅ Kimball-style dimensional modelling (facts, dimensions, grain design)
+- ✅ NULL-guarded timestamp calculations with timezone normalisation to UTC
+- ✅ Data quality tests at every layer including range checks and conditional not-nulls
+- ✅ dbt packages (`dbt_utils`)
+- ✅ Seeds, snapshots, macros scaffolded
 
 ---
 
@@ -214,7 +199,7 @@ This project is the analytics engineering evolution of an earlier ETL pipeline b
 
 👉 **[View the original ETL project → data-driven-sql](https://github.com/efuatutuwaa/data-driven-sql)**
 
-That foundation informed the data modeling decisions made here, and this repo represents the next step: applying analytics engineering patterns — dbt, layered transformations, data quality, and a semantic layer — on top of a properly ingested dataset.
+That foundation informed the data modelling decisions made here, and this repo represents the next step: applying analytics engineering patterns — dbt, layered transformations, data quality, and dimensional modelling — on top of a properly ingested dataset.
 
 ---
 
