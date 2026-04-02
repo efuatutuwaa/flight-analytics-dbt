@@ -47,7 +47,7 @@ AviationStack API
 ### Layer Responsibilities
 
 - **Staging** — 1:1 with source tables. Renames columns, casts types, applies light cleaning. No joins, no aggregations. Materialised as views.
-- **Intermediate** — Three model types per Bolt standard: `*_spine` (joins), `*_metrics` (derived flags and pre-classified columns), `*_features` (complex derivations). Business logic lives here, not in exposed models.
+- **Intermediate** — Three model types: `*_spine` (joins), `*_metrics` (derived flags and pre-classified columns), `*_features` (complex derivations). Business logic lives here, not in exposed models.
 - **Core** — Shared, reusable dimensions and facts (`dim_*`, `fct_*`). SQL is SELECT...FROM...JOIN only — no business logic.
 - **Marts** — Domain-oriented aggregated tables. Reference `int_*_metrics` models so no business logic is repeated across marts.
 
@@ -180,7 +180,7 @@ Interactive dashboard built with **Streamlit**, querying mart models directly fr
 
 ## 🔑 Key Concepts Demonstrated
 
-- ✅ Bolt Data Modelling standard — spine/metrics/features intermediate pattern
+- ✅ Spine/metrics/features intermediate pattern — business logic defined once, aggregated upward
 - ✅ Multi-layer transformation architecture (staging → intermediate → core → marts)
 - ✅ Exposed model purity — no business logic in `dim_*`, `fct_*`, or mart SQL
 - ✅ Metrics defined once in `int_flight_metrics`, aggregated upward by all marts
