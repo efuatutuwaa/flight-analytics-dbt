@@ -133,3 +133,51 @@ models:
               min_value: 0
               max_value: 1
               severity: warn
+
+  - name: mart_codeshare_complexity
+    description: "Codeshare partnership metrics. One row per operating airline + marketing airline pair."
+    columns:
+      - name: operating_airline_id
+        description: "Grain key. Foreign key to dim_airline for the airline physically operating the flight."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airline')
+              field: airline_id
+      - name: marketing_airline_id
+        description: "Grain key. Foreign key to dim_airline for the airline selling the ticket."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_airline')
+              field: airline_id
+      - name: total_codeshare_flights
+        description: "Total number of flights in this operating + marketing airline partnership."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              severity: warn
+      - name: total_routes_shared
+        description: "Number of distinct routes shared between the operating and marketing airline."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              severity: warn
+      - name: total_true_codeshares
+        description: "Number of flights where the operating and marketing airline differ."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              severity: warn
+      - name: codeshare_rate
+        description: "Proportion of flights that are true codeshares. Value between 0 and 1."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              severity: warn
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - operating_airline_id
+            - marketing_airline_id

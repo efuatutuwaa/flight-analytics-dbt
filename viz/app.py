@@ -11,7 +11,7 @@ st.markdown("An end-to-end analytics engineering project modelling real-world fl
 
 st.divider()
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown("### 🏷️ Airline Performance")
@@ -27,6 +27,11 @@ with col3:
     st.markdown("### 🏢 Airport Operations")
     st.markdown("Airport traffic volumes and departure/arrival performance by airport.")
     st.page_link("pages/3_airport_operations.py", label="View Dashboard →")
+
+with col4:
+    st.markdown("### 🔗 Codeshare Complexity")
+    st.markdown("Marketing vs operating airline partnerships and codeshare activity.")
+    st.page_link("pages/4_codeshare_complexity.py", label="View Dashboard →")
 
 st.divider()
 
